@@ -1,10 +1,12 @@
 .gradle
 .vscode
 
+.classpath
+.project
+
 /build/
+build
 
 gradle-app.setting
 !gradle-wrapper.jar
 .gradletasknamecache
-
-build

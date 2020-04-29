@@ -1,4 +1,80 @@
 plugins {
-    id 'base'
+    id 'java'
+    id 'maven-publish'
+
+    id 'de.undercouch.download' version '4.0.4'
+    id "com.jfrog.bintray" version "1.8.5"
 }
 
+repositories {
+    jcenter()
+}
+
+dependencies {
+    runtime group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
+    runtime group: 'org.slf4j', name: 'slf4j-ext', version: '1.7.30'
+    runtime group: 'org.slf4j', name: 'jul-to-slf4j', version: '1.7.30'
+    
+    runtime group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.13.2'
+    runtime group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.13.2'
+    runtime group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.2'
+    // runtime group: 'org.apache.logging.log4j', name: 'log4j-web', version: '2.13.2'
+    runtime group: 'com.lmax', name: 'disruptor', version: '3.4.2'
+    runtime group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.11.0'
+}
+
+task downloadPayaraMicro(type: Download) {
+    src "https://repo1.maven.org/maven2/fish/payara/extras/payara-micro/${version}/payara-micro-${version}.jar"
+    dest buildDir
+    onlyIfModified true
+}
+
+task extractPayaraMicro(type: Copy, dependsOn: downloadPayaraMicro) {
+    from zipTree("${buildDir}/payara-micro-${version}.jar")
+    into "${buildDir}/payara-micro-${version}"
+}
+
+task copyDependencies(type: Copy, dependsOn: extractPayaraMicro) {
+    from configurations.runtime
+    into "${buildDir}/libs"
+}
+
+task copyLoggingProperties(type: Copy, dependsOn: extractPayaraMicro) {
+    from file('logging.properties')
+    into "${buildDir}/libs"
+}
+
+task copyLog4j2Xml(type: Copy, dependsOn: extractPayaraMicro) {
+    from file('log4j2.xml')
+    into "${buildDir}/libs"
+}
+
+task patchManifest(dependsOn: extractPayaraMicro) {
+    doLast {
+        def manifest = file("${buildDir}/payara-micro-${version}/META-INF/MANIFEST.MF")
+        def manifestContents = []
+        
+        def classPathDependencies = configurations.runtime.collect { "$it.name" }.join(' ')
+        manifestContents << 'Class-Path: ' + classPathDependencies
+
+        manifest.eachLine {
+            manifestContents << it
+        }
+
+        manifest.withWriter('utf-8') {
+            it.println(manifestContents.join('\n'))
+        }
+    }    
+}
+
+task repackagePayaraMicro(type: Jar, dependsOn: [copyDependencies, patchManifest]) {
+    from "${buildDir}/payara-micro-${version}"
+    baseName = project.name
+    manifest {
+   		from file("${buildDir}/payara-micro-${version}/META-INF/MANIFEST.MF")
+    }
+}
+
+repackagePayaraMicro.finalizedBy copyLoggingProperties, copyLog4j2Xml
+
+build.dependsOn repackagePayaraMicro
