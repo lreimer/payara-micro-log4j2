@@ -7,20 +7,22 @@ plugins {
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
-    runtime group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
-    runtime group: 'org.slf4j', name: 'slf4j-ext', version: '1.7.30'
-    runtime group: 'org.slf4j', name: 'jul-to-slf4j', version: '1.7.30'
+    runtimeOnly group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
+    runtimeOnly group: 'org.slf4j', name: 'slf4j-ext', version: '1.7.30'
+    runtimeOnly group: 'org.slf4j', name: 'jul-to-slf4j', version: '1.7.30'
     
-    runtime group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.13.2'
-    runtime group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.13.2'
-    runtime group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.2'
-    // runtime group: 'org.apache.logging.log4j', name: 'log4j-web', version: '2.13.2'
-    runtime group: 'com.lmax', name: 'disruptor', version: '3.4.2'
-    runtime group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.11.0'
+    runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.0'
+    runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.14.0'
+    runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
+    
+    runtimeOnly group: 'com.lmax', name: 'disruptor', version: '3.4.2'
+    
+    runtimeOnly group: 'co.elastic.logging', name: 'log4j2-ecs-layout', version: '1.0.0'
+    runtimeOnly group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.11.0'
 }
 
 task downloadPayaraMicro(type: Download) {
@@ -35,7 +37,7 @@ task extractPayaraMicro(type: Copy, dependsOn: downloadPayaraMicro) {
 }
 
 task copyDependencies(type: Copy, dependsOn: extractPayaraMicro) {
-    from configurations.runtime
+    from configurations.runtimeClasspath
     into "${buildDir}/libs"
 }
 
@@ -54,7 +56,7 @@ task patchManifest(dependsOn: extractPayaraMicro) {
         def manifest = file("${buildDir}/payara-micro-${version}/META-INF/MANIFEST.MF")
         def manifestContents = []
         
-        def classPathDependencies = configurations.runtime.collect { "$it.name" }.join(' ')
+        def classPathDependencies = configurations.runtimeClasspath.collect { "$it.name" }.join(' ')
         manifestContents << 'Class-Path: ' + classPathDependencies
 
         manifest.eachLine {

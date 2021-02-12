@@ -8,7 +8,7 @@ A custom Payara Micro variant using Log4J2 (async) as logging implementation.
 $ ./gradlew clean ass
 
 $ cd build/libs/
-$ java -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlog4j.configurationFile=log4j2.xml -jar payara-micro-log4j2-5.201.jar --logproperties logging.properties --nocluster
+$ java -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlog4j.configurationFile=log4j2.xml -jar payara-micro-log4j2-5.2021.1.jar --logproperties logging.properties --nocluster
 ```
 
 
