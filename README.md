@@ -5,7 +5,7 @@ A custom Payara Micro variant using Log4J2 (async) as logging implementation.
 ## Building and Running
 
 ```bash
-$ ./gradlew clean ass
+$ ./gradlew build
 
 # run locally
 $ cd build/libs/
