@@ -26,14 +26,14 @@ dependencies {
 }
 
 task downloadPayaraMicro(type: Download) {
-    src "https://repo1.maven.org/maven2/fish/payara/extras/payara-micro/${version}/payara-micro-${version}.jar"
+    src "https://repo1.maven.org/maven2/fish/payara/extras/payara-micro/${payaraVersion}/payara-micro-${payaraVersion}.jar"
     dest buildDir
     onlyIfModified true
 }
 
 task extractPayaraMicro(type: Copy, dependsOn: downloadPayaraMicro) {
-    from zipTree("${buildDir}/payara-micro-${version}.jar")
-    into "${buildDir}/payara-micro-${version}"
+    from zipTree("${buildDir}/payara-micro-${payaraVersion}.jar")
+    into "${buildDir}/payara-micro-${payaraVersion}"
 }
 
 task copyDependencies(type: Copy, dependsOn: extractPayaraMicro) {
@@ -53,7 +53,7 @@ task copyLog4j2Xml(type: Copy, dependsOn: extractPayaraMicro) {
 
 task patchManifest(dependsOn: extractPayaraMicro) {
     doLast {
-        def manifest = file("${buildDir}/payara-micro-${version}/META-INF/MANIFEST.MF")
+        def manifest = file("${buildDir}/payara-micro-${payaraVersion}/META-INF/MANIFEST.MF")
         def manifestContents = []
         
         def classPathDependencies = configurations.runtimeClasspath.collect { "$it.name" }.join(' ')
@@ -70,13 +70,18 @@ task patchManifest(dependsOn: extractPayaraMicro) {
 }
 
 task repackagePayaraMicro(type: Jar, dependsOn: [copyDependencies, patchManifest]) {
-    from "${buildDir}/payara-micro-${version}"
-    baseName = project.name
+    from "${buildDir}/payara-micro-${payaraVersion}"
+    archiveBaseName = 'payara-micro'
     manifest {
-   		from file("${buildDir}/payara-micro-${version}/META-INF/MANIFEST.MF")
+   		from file("${buildDir}/payara-micro-${payaraVersion}/META-INF/MANIFEST.MF")
     }
+}
+
+task removeBuildArtifact(type: Delete) {
+    delete "${buildDir}/libs/${project.name}.jar"
 }
 
 repackagePayaraMicro.finalizedBy copyLoggingProperties, copyLog4j2Xml
 
 build.dependsOn repackagePayaraMicro
+build.finalizedBy removeBuildArtifact

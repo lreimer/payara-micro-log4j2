@@ -7,8 +7,15 @@ A custom Payara Micro variant using Log4J2 (async) as logging implementation.
 ```bash
 $ ./gradlew clean ass
 
+# run locally
 $ cd build/libs/
-$ java -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlog4j.configurationFile=log4j2.xml -jar payara-micro-log4j2-5.2021.1.jar --logproperties logging.properties --nocluster
+$ java -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlog4j.configurationFile=log4j2.xml -jar payara-micro.jar --logproperties logging.properties --nocluster
+
+# build image and run
+$ docker build -t lreimer/payara-micro-log4j2:5.2021.1 .
+$ docker push lreimer/payara-micro-log4j2:5.2021.1
+
+$ docker run --rm -it -p 8080:8080 lreimer/payara-micro-log4j2:5.2021.1
 ```
 
 
